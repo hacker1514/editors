@@ -15,7 +15,8 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-    - uses: actions/checkout@v3
+    - name: Checkout Repository
+      uses: actions/checkout@v3
 
     - name: Set up Python
       uses: actions/setup-python@v4
@@ -31,12 +32,18 @@ jobs:
     - name: Build Executable
       run: |
         echo "Building on ${{ matrix.os }}"
-        if [ "${{ matrix.os }}" == "windows-latest" ]; then
-          pyinstaller --onefile --name MyEditor.exe main.py
-        else
-          pyinstaller --onefile --name MyEditor main.py
 
-    - name: Upload Artifacts
+        # PyInstaller hidden imports for prompt_toolkit
+        HIDDEN_IMPORTS="--hidden-import prompt_toolkit.lexers \
+                        --hidden-import prompt_toolkit.widgets \
+                        --hidden-import prompt_toolkit.completion"
+
+        if [ "${{ matrix.os }}" == "windows-latest" ]; then
+          pyinstaller --onefile --name MyEditor.exe $HIDDEN_IMPORTS main.py
+        else
+          pyinstaller --onefile --name MyEditor $HIDDEN_IMPORTS main.py
+
+    - name: Upload Binaries
       uses: actions/upload-artifact@v3
       with:
         name: ${{ matrix.os }}-binaries
