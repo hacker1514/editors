@@ -1,35 +1,39 @@
-name: Build Multi-OS Executables
+name: Build Cross-Platform Executables
 
-on: [push]
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
 
 jobs:
   build:
-    runs-on: ${{ matrix.os }}
-    
+    runs-on: ubuntu-latest
     strategy:
       matrix:
-        os: [windows-latest, ubuntu-latest, macos-latest]
+        os: [ubuntu-latest, macos-latest, windows-latest]
 
     steps:
-    - name: Checkout
-      uses: actions/checkout@v4
-
-    - name: Setup Python
-      uses: actions/setup-python@v5
+    - uses: actions/checkout@v3
+    - name: Set up Python
+      uses: actions/setup-python@v4
       with:
-        python-version: "3.10"
-
-    - name: Install Dependencies
+        python-version: '3.11'
+    - name: Install dependencies
       run: |
-        pip install -r requirements.txt
+        python -m pip install --upgrade pip
         pip install pyinstaller
-
-    - name: Build EXE
+    - name: Build Executable
       run: |
-        pyinstaller --onefile main.py
-
-    - name: Upload Build
-      uses: actions/upload-artifact@v4
+        if [ "${{ matrix.os }}" == "windows-latest" ]; then
+          pyinstaller --onefile main.py
+        elif [ "${{ matrix.os }}" == "ubuntu-latest" ]; then
+          pyinstaller --onefile --name main main.py
+        elif [ "${{ matrix.os }}" == "macos-latest" ]; then
+          pyinstaller --onefile --name main main.py
+        fi
+    - name: Upload Artifacts
+      uses: actions/upload-artifact@v3
       with:
-        name: build-${{ matrix.os }}
-        path: dist/
+        name: ${{ matrix.os }}-binaries
+        path: dist/*
