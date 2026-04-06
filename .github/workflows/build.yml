@@ -15,7 +15,7 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-    - name: Checkout Repository
+    - name: Checkout code
       uses: actions/checkout@v3
 
     - name: Set up Python
@@ -29,19 +29,13 @@ jobs:
         pip install -r requirements.txt
         pip install pyinstaller
 
-    - name: Build Executable
+    - name: Build Executable using Spec
       run: |
         echo "Building on ${{ matrix.os }}"
-
-        # PyInstaller hidden imports for prompt_toolkit
-        HIDDEN_IMPORTS="--hidden-import prompt_toolkit.lexers \
-                        --hidden-import prompt_toolkit.widgets \
-                        --hidden-import prompt_toolkit.completion"
-
         if [ "${{ matrix.os }}" == "windows-latest" ]; then
-          pyinstaller --onefile --name MyEditor.exe $HIDDEN_IMPORTS main.py
+          pyinstaller my_editor.spec --name MyEditor.exe
         else
-          pyinstaller --onefile --name MyEditor $HIDDEN_IMPORTS main.py
+          pyinstaller my_editor.spec --name MyEditor
 
     - name: Upload Binaries
       uses: actions/upload-artifact@v3
